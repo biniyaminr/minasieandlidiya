@@ -15,22 +15,6 @@ interface UploadState {
 
 const MAX_FILE_SIZE = 40 * 1024 * 1024; // 40MB limit to prevent memory limits on Apps Script
 
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => {
-      if (reader.result) {
-        const base64Data = reader.result.toString().split(',')[1];
-        resolve(base64Data);
-      } else {
-        reject(new Error('Failed to convert file to Base64'));
-      }
-    };
-    reader.onerror = error => reject(error);
-  });
-};
-
 const Upload = () => {
   const [uploads, setUploads] = useState<UploadState[]>([]);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -38,73 +22,73 @@ const Upload = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = async () => {
-    const appsScriptUrl = import.meta.env.VITE_APPS_SCRIPT_URL;
+    console.log("[FRONTEND] handleUpload TRIGGERED");
 
-    if (!appsScriptUrl) {
-      toast.error('Upload URL is not configured.');
+    // URL defaults to local express server if environment variable isn't set
+    const uploadApiUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3002/api/upload';
+    console.log("[FRONTEND] Destination URL resolved to:", uploadApiUrl);
+
+    const pendingUploads = uploads.filter(u => u.status === 'pending');
+    console.log(`[FRONTEND] Found ${pendingUploads.length} pending uploads in state`);
+
+    if (pendingUploads.length === 0) {
+      console.log("[FRONTEND] ABORTING: No pending files to upload.");
       return;
     }
 
-    const pendingUploads = uploads.filter(u => u.status === 'pending');
-    if (pendingUploads.length === 0) return;
-
     let hasError = false;
+    console.log("[FRONTEND] Beginning upload loop...");
 
     for (const uploadItem of pendingUploads) {
       try {
-        setUploads(prev => prev.map(u => 
-          u.file === uploadItem.file ? { ...u, status: 'uploading', progress: 25 } : u
+        console.log(`[FRONTEND] Processing file: ${uploadItem.file.name}`);
+
+        setUploads(prev => prev.map(u =>
+          u.file === uploadItem.file ? { ...u, status: 'uploading', progress: 50 } : u
         ));
 
-        // Convert file to Base64
-        const base64Data = await fileToBase64(uploadItem.file);
+        // Use standard FormData
+        const formData = new FormData();
+        formData.append('file', uploadItem.file);
 
-        setUploads(prev => prev.map(u => 
-          u.file === uploadItem.file ? { ...u, progress: 50 } : u
-        ));
+        console.log(`[FRONTEND] Sending POST request for ${uploadItem.file.name} to ${uploadApiUrl}`);
 
-        console.log("Sending file to Google Apps Script...");
-        
-        // Prepare URLSearchParams payload
-        const params = new URLSearchParams();
-        params.append('filename', uploadItem.file.name);
-        params.append('mimetype', uploadItem.file.type);
-        params.append('data', base64Data);
-
-        const response = await fetch(appsScriptUrl, {
+        // Upload using standard fetch multipart
+        const response = await fetch(uploadApiUrl, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: params.toString(),
-          // mode: 'cors' is default, but ensuring we don't trigger preflight is key
+          body: formData
         });
 
-        const resultText = await response.text();
-        console.log("Raw Response from Google:", resultText);
+        console.log(`[FRONTEND] Received response for ${uploadItem.file.name} with HTTP Status: ${response.status}`);
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errText = await response.text();
+          throw new Error(`Server returned ${response.status}: ${errText}`);
         }
 
-        // Parse the JSON manually after checking text to prevent silent JSON parse crashes
-        const resultData = JSON.parse(resultText);
-        
+        const resultData = await response.json();
+        console.log(`[FRONTEND] JSON Payload received:`, resultData);
+
+        // --- TEMPORARY DEBUG TRAP ---
+        console.log(`DEBUG: Result data status is: ${resultData.status}`);
+
         if (resultData.status !== 'success') {
-          throw new Error(resultData.message || "Apps script returned an error");
+          console.error(`[FRONTEND] Throwing error because status !== 'success'`);
+          throw new Error(resultData.message || "Backend returned an error");
         }
 
-        setUploads(prev => prev.map(u => 
+        console.log(`[FRONTEND] File ${uploadItem.file.name} marked as completed.`);
+        setUploads(prev => prev.map(u =>
           u.file === uploadItem.file ? { ...u, status: 'completed', progress: 100 } : u
         ));
-      } catch (error) {
-        console.error("Upload failed miserably:", error);
+
+      } catch (error: any) {
+        console.error("Upload Error:", error);
         hasError = true;
-        setUploads(prev => prev.map(u => 
+        setUploads(prev => prev.map(u =>
           u.file === uploadItem.file ? { ...u, status: 'error' } : u
         ));
         toast.error(`Failed to upload ${uploadItem.file.name}`);
-        break; // Stop uploading further files if one fails
       }
     }
 
@@ -188,7 +172,7 @@ const Upload = () => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       processFiles(Array.from(e.dataTransfer.files));
     }
@@ -218,7 +202,7 @@ const Upload = () => {
             Thank you for sharing your beautiful moments with Minasie & Lidiya. Your memories are now part of our story!
           </p>
         </div>
-        <Button 
+        <Button
           onClick={() => {
             setUploads([]);
             setIsSuccess(false);
@@ -240,31 +224,31 @@ const Upload = () => {
 
       <main className="flex-1 p-6 flex flex-col max-w-md mx-auto w-full space-y-8">
         {/* Main Upload Area / Drop Zone */}
-        <div 
+        <div
           onDragEnter={handleDragEnter}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           className={cn(
             "group flex-1 min-h-[420px] border-2 border-dashed rounded-[48px] flex flex-col items-center justify-center p-8 text-center transition-all duration-500 relative overflow-hidden",
-            isDragging 
-              ? "border-[#B4915C] bg-[#B4915C]/5 scale-[0.98] shadow-2xl shadow-[#B4915C]/10" 
+            isDragging
+              ? "border-[#B4915C] bg-[#B4915C]/5 scale-[0.98] shadow-2xl shadow-[#B4915C]/10"
               : "border-[#B4915C]/20 bg-white/40 hover:bg-white/60 hover:border-[#B4915C]/40"
           )}
         >
-          <input 
-            type="file" 
+          <input
+            type="file"
             id="wedding-upload"
             ref={fileInputRef}
             onChange={handleFileChange}
-            multiple 
-            accept="image/*,video/*" 
+            multiple
+            accept="image/*,video/*"
             className="sr-only"
             aria-label="Upload wedding photos and videos"
           />
-          
-          <motion.div 
-            animate={{ 
+
+          <motion.div
+            animate={{
               scale: isDragging ? 1.15 : 1,
               y: isDragging ? -12 : 0,
             }}
@@ -290,7 +274,7 @@ const Upload = () => {
             </p>
           </div>
 
-          <Button 
+          <Button
             onClick={() => fileInputRef.current?.click()}
             disabled={isCurrentlyUploading}
             className={cn(
@@ -307,7 +291,7 @@ const Upload = () => {
               'Upload Wedding Memories'
             )}
           </Button>
-          
+
           <div className="flex gap-10 z-10">
             <div className="flex flex-col items-center gap-2 group/icon">
               <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#B4915C] transition-transform group-hover/icon:-translate-y-1">
@@ -325,15 +309,15 @@ const Upload = () => {
 
           {/* Decorative Background Elements */}
           <div className="absolute top-0 right-0 p-4 opacity-5">
-             <Plus className="w-12 h-12 text-[#B4915C]" />
+            <Plus className="w-12 h-12 text-[#B4915C]" />
           </div>
           <div className="absolute bottom-0 left-0 p-4 opacity-5">
-             <Plus className="w-8 h-8 text-[#B4915C]" />
+            <Plus className="w-8 h-8 text-[#B4915C]" />
           </div>
 
           <AnimatePresence>
             {isDragging && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -348,7 +332,7 @@ const Upload = () => {
         {/* Upload List & Progress */}
         <AnimatePresence>
           {uploads.length > 0 && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -369,7 +353,7 @@ const Upload = () => {
                   </span>
                 </div>
               </div>
-              
+
               <div className="space-y-3 max-h-[340px] overflow-y-auto pr-2 custom-scrollbar">
                 {uploads.map((upload, index) => (
                   <Card key={`${upload.file.name}-${index}`} className="p-4 border-none shadow-sm flex items-center gap-4 bg-white/70 rounded-2xl group transition-all hover:bg-white">
@@ -394,7 +378,7 @@ const Upload = () => {
                       </div>
                       <div className="mt-2 relative">
                         <div className="h-1.5 w-full bg-[#B4915C]/10 rounded-full overflow-hidden">
-                          <motion.div 
+                          <motion.div
                             className={cn(
                               "h-full transition-colors",
                               upload.status === 'error' ? "bg-red-400" : "bg-[#B4915C]"
@@ -411,13 +395,13 @@ const Upload = () => {
                         <Loader2 className="w-5 h-5 animate-spin text-[#B4915C]" />
                       )}
                       {upload.status === 'completed' && (
-                         <div className="w-5 h-5 flex items-center justify-center">
-                           <CheckCircle2 className="w-5 h-5 text-green-500" />
-                         </div>
+                        <div className="w-5 h-5 flex items-center justify-center">
+                          <CheckCircle2 className="w-5 h-5 text-green-500" />
+                        </div>
                       )}
                       {(upload.status === 'error' || upload.status === 'completed' || upload.status === 'pending') && (
-                        <button 
-                          onClick={() => removeUpload(upload.file)} 
+                        <button
+                          onClick={() => removeUpload(upload.file)}
                           className="p-2 hover:bg-red-50 rounded-full transition-colors text-[#1C1917]/20 hover:text-red-400"
                         >
                           <X className="w-4 h-4" />
@@ -427,9 +411,9 @@ const Upload = () => {
                   </Card>
                 ))}
               </div>
-              
+
               <div className="pt-2">
-                <Button 
+                <Button
                   disabled={!hasPending || isCurrentlyUploading}
                   onClick={handleUpload}
                   className="w-full h-16 bg-[#B4915C] hover:bg-[#B4915C]/90 text-white rounded-[28px] shadow-xl shadow-[#B4915C]/20 disabled:opacity-30 disabled:grayscale text-lg font-serif transition-all active:scale-[0.98] hover:scale-[1.01]"
@@ -452,7 +436,8 @@ const Upload = () => {
       </footer>
 
       {/* Custom Styles for Scrollbar */}
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .custom-scrollbar::-webkit-scrollbar {
           width: 4px;
         }

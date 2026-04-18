@@ -23,3 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 .env
+server/service-account.json
+*.txt
+test_image*
+.env*
+server/.env*
+public/images/*
+!public/images/.gitkeep

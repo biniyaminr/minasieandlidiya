@@ -23,9 +23,21 @@ const GalleryGrid: React.FC<GalleryGridProps> = ({ isAdmin = false, onFilesLoade
   const loadFiles = async () => {
     setIsLoading(true);
     try {
-      const data = await fetchFiles();
-      setFiles(data);
-      onFilesLoaded?.(data);
+      // Mock the Supabase fetch with local static images from public/images/
+      const staticImages = Array.from({ length: 17 }).map((_, i) => ({
+        id: `static-img-${i + 1}`,
+        name: `Beautiful Memory ${i + 1}`,
+        url: `/images/${i + 1}.jpg`,
+        size: 0,
+        type: 'image',
+        created_at: new Date().toISOString()
+      }));
+      
+      // Artificial delay to show the nice loading state briefly
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      setFiles(staticImages as any[]);
+      onFilesLoaded?.(staticImages as any[]);
     } catch (error) {
       toast.error('Failed to load gallery');
     } finally {

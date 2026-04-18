@@ -29,6 +29,20 @@ interface UploadState {
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB limit
 
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      let encoded = reader.result?.toString().replace(/^data:(.*,)?/, '');
+      if ((encoded!.length % 4) > 0) {
+        encoded += '='.repeat(4 - (encoded!.length % 4));
+      }
+      resolve(encoded!);
+    };
+    reader.onerror = error => reject(error);
+  });
+};
 const Home = () => {
   // Upload States
   const [uploads, setUploads] = useState<UploadState[]>([]);
@@ -37,20 +51,39 @@ const Home = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const startUploads = useCallback(async (newUploadItems: UploadState[]) => {
+    const appsScriptUrl = import.meta.env.VITE_APPS_SCRIPT_URL;
+
     for (const uploadItem of newUploadItems) {
       try {
         setUploads(prev => prev.map(u => 
-          u.file === uploadItem.file ? { ...u, status: 'uploading' } : u
+          u.file === uploadItem.file ? { ...u, status: 'uploading', progress: 50 } : u
         ));
 
-        const publicUrl = await uploadFile(uploadItem.file, (progress) => {
-          setUploads(prev => prev.map(u => 
-            u.file === uploadItem.file ? { ...u, progress } : u
-          ));
+        // 1. Convert file to Base64 (Ensure fileToBase64 helper is in Home.tsx)
+        const base64Data = await fileToBase64(uploadItem.file);
+
+        // 2. The Plain Text Bypass to Google Apps Script
+        const response = await fetch(appsScriptUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain;charset=utf-8',
+          },
+          body: JSON.stringify({
+            filename: uploadItem.file.name,
+            mimetype: uploadItem.file.type,
+            data: base64Data
+          })
         });
 
+        const resultText = await response.text();
+        const resultData = JSON.parse(resultText);
+        
+        if (resultData.status !== 'success') {
+          throw new Error(resultData.message || "Apps script returned an error");
+        }
+
         setUploads(prev => prev.map(u => 
-          u.file === uploadItem.file ? { ...u, status: 'completed', url: publicUrl, progress: 100 } : u
+          u.file === uploadItem.file ? { ...u, status: 'completed', progress: 100 } : u
         ));
       } catch (error) {
         console.error('Upload failed:', error);
