@@ -28,8 +28,5 @@ server/service-account.json
 test_image*
 .env*
 server/.env*
-public/images/*
-!public/images/.gitkeep
+# Local wedding images moved to public/images/ — included in repo (each file <100MB)
 
-# Local wedding images (too large for GitHub, serve locally or via CDN)
-src/public/images/
