@@ -217,21 +217,7 @@ const Home = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 pb-24 space-y-24">
-        {/* Gallery Section */}
-        <section className="space-y-12">
-          <div className="flex flex-col items-center text-center space-y-4">
-            <div className="p-2 bg-[#B4915C]/10 rounded-full">
-              <Sparkles className="w-5 h-5 text-[#B4915C]" />
-            </div>
-            <h2 className="text-3xl md:text-4xl font-serif text-[#1C1917]">Shared Memories</h2>
-            <p className="text-[#1C1917]/50 max-w-lg mx-auto">
-              A collection of beautiful moments shared by our beloved guests.
-            </p>
-          </div>
-          <GalleryGrid />
-        </section>
-
-        {/* Upload Section - REPLACES QR CODE */}
+        {/* Upload Section — shown first so guests see it immediately */}
         <section className="flex flex-col items-center">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -467,6 +453,20 @@ const Home = () => {
               Share your beautiful photos and videos to be featured in our collective wedding gallery.
             </p>
           </motion.div>
+        </section>
+
+        {/* Gallery Section — below upload so guests scroll down to see shared memories */}
+        <section className="space-y-12">
+          <div className="flex flex-col items-center text-center space-y-4">
+            <div className="p-2 bg-[#B4915C]/10 rounded-full">
+              <Sparkles className="w-5 h-5 text-[#B4915C]" />
+            </div>
+            <h2 className="text-3xl md:text-4xl font-serif text-[#1C1917]">Shared Memories</h2>
+            <p className="text-[#1C1917]/50 max-w-lg mx-auto">
+              A collection of beautiful moments shared by our beloved guests.
+            </p>
+          </div>
+          <GalleryGrid />
         </section>
       </main>
 
