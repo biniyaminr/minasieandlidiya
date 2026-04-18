@@ -6,28 +6,25 @@ import { fetchFiles, UploadedFile, deleteFile } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { saveAs } from 'file-saver';
 
-// Static imports for wedding images (Vite requires explicit imports for src/ assets)
-import img1 from '@/public/images/1.jpg';
-import img2 from '@/public/images/2.jpg';
-import img3 from '@/public/images/3.jpg';
-import img4 from '@/public/images/4.jpg';
-import img5 from '@/public/images/5.jpg';
-import img6 from '@/public/images/6.jpg';
-import img7 from '@/public/images/7.jpg';
-import img8 from '@/public/images/8.jpg';
-import img9 from '@/public/images/9.jpg';
-import img10 from '@/public/images/10.jpg';
-import img11 from '@/public/images/11.jpg';
-import img12 from '@/public/images/12.jpg';
-import img13 from '@/public/images/13.jpg';
-import img14 from '@/public/images/14.jpg';
-import img15 from '@/public/images/15.jpg';
-import img16 from '@/public/images/16.jpg';
-import img17 from '@/public/images/17.jpg';
-
+// Images served from public/images/ — Vite serves these as static assets
 const WEDDING_IMAGES = [
-  img1, img2, img3, img4, img5, img6, img7, img8, img9,
-  img10, img11, img12, img13, img14, img15, img16, img17
+  '/images/1.jpg',
+  '/images/2.jpg',
+  '/images/3.jpg',
+  '/images/4.jpg',
+  '/images/5.jpg',
+  '/images/6.jpg',
+  '/images/7.jpg',
+  '/images/8.jpg',
+  '/images/9.jpg',
+  '/images/10.jpg',
+  '/images/11.jpg',
+  '/images/12.jpg',
+  '/images/13.jpg',
+  '/images/14.jpg',
+  '/images/15.jpg',
+  '/images/16.jpg',
+  '/images/17.jpg'
 ];
 
 interface GalleryGridProps {
