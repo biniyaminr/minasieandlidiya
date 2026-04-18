@@ -6,27 +6,6 @@ import { fetchFiles, UploadedFile, deleteFile } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { saveAs } from 'file-saver';
 
-// Images served from public/images/ — Vite serves these as static assets
-const WEDDING_IMAGES = [
-  '/images/1.jpg',
-  '/images/2.jpg',
-  '/images/3.jpg',
-  '/images/4.jpg',
-  '/images/5.jpg',
-  '/images/6.jpg',
-  '/images/7.jpg',
-  '/images/8.jpg',
-  '/images/9.jpg',
-  '/images/10.jpg',
-  '/images/11.jpg',
-  '/images/12.jpg',
-  '/images/13.jpg',
-  '/images/14.jpg',
-  '/images/15.jpg',
-  '/images/16.jpg',
-  '/images/17.jpg'
-];
-
 interface GalleryGridProps {
   isAdmin?: boolean;
   onFilesLoaded?: (files: UploadedFile[]) => void;
@@ -44,26 +23,30 @@ const GalleryGrid: React.FC<GalleryGridProps> = ({ isAdmin = false, onFilesLoade
   const loadFiles = async () => {
     setIsLoading(true);
     try {
-      // Use statically imported images (in numerical order 1–17)
-      const staticImages = WEDDING_IMAGES.map((src, i) => ({
-        id: `static-img-${i + 1}`,
-        name: `Beautiful Memory ${i + 1}`,
-        url: src,
+      const scriptUrl = import.meta.env.VITE_APPS_SCRIPT_URL;
+
+      const response = await fetch(scriptUrl);
+      const imageUrls: string[] = await response.json();
+
+      const liveImages = imageUrls.map((url, i) => ({
+        id: `live-img-${i}`,
+        name: `Wedding Memory ${i + 1}`,
+        url,
         size: 0,
-        type: 'image',
+        type: url.toLowerCase().includes('.mp4') || url.toLowerCase().includes('.mov') ? 'video' : 'image',
         created_at: new Date().toISOString()
       }));
 
-      await new Promise(resolve => setTimeout(resolve, 800));
-
-      setFiles(staticImages as any[]);
-      onFilesLoaded?.(staticImages as any[]);
+      setFiles(liveImages as any[]);
+      onFilesLoaded?.(liveImages as any[]);
     } catch (error) {
+      console.error('Failed to fetch live images:', error);
       toast.error('Failed to load gallery');
     } finally {
       setIsLoading(false);
     }
   };
+
 
   const handleDelete = async (file: UploadedFile) => {
     if (!confirm('Are you sure you want to delete this file?')) return;
