@@ -6,6 +6,30 @@ import { fetchFiles, UploadedFile, deleteFile } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { saveAs } from 'file-saver';
 
+// Static imports for wedding images (Vite requires explicit imports for src/ assets)
+import img1 from '@/public/images/1.jpg';
+import img2 from '@/public/images/2.jpg';
+import img3 from '@/public/images/3.jpg';
+import img4 from '@/public/images/4.jpg';
+import img5 from '@/public/images/5.jpg';
+import img6 from '@/public/images/6.jpg';
+import img7 from '@/public/images/7.jpg';
+import img8 from '@/public/images/8.jpg';
+import img9 from '@/public/images/9.jpg';
+import img10 from '@/public/images/10.jpg';
+import img11 from '@/public/images/11.jpg';
+import img12 from '@/public/images/12.jpg';
+import img13 from '@/public/images/13.jpg';
+import img14 from '@/public/images/14.jpg';
+import img15 from '@/public/images/15.jpg';
+import img16 from '@/public/images/16.jpg';
+import img17 from '@/public/images/17.jpg';
+
+const WEDDING_IMAGES = [
+  img1, img2, img3, img4, img5, img6, img7, img8, img9,
+  img10, img11, img12, img13, img14, img15, img16, img17
+];
+
 interface GalleryGridProps {
   isAdmin?: boolean;
   onFilesLoaded?: (files: UploadedFile[]) => void;
@@ -23,19 +47,18 @@ const GalleryGrid: React.FC<GalleryGridProps> = ({ isAdmin = false, onFilesLoade
   const loadFiles = async () => {
     setIsLoading(true);
     try {
-      // Mock the Supabase fetch with local static images from public/images/
-      const staticImages = Array.from({ length: 17 }).map((_, i) => ({
+      // Use statically imported images (in numerical order 1–17)
+      const staticImages = WEDDING_IMAGES.map((src, i) => ({
         id: `static-img-${i + 1}`,
         name: `Beautiful Memory ${i + 1}`,
-        url: `/images/${i + 1}.jpg`,
+        url: src,
         size: 0,
         type: 'image',
         created_at: new Date().toISOString()
       }));
-      
-      // Artificial delay to show the nice loading state briefly
+
       await new Promise(resolve => setTimeout(resolve, 800));
-      
+
       setFiles(staticImages as any[]);
       onFilesLoaded?.(staticImages as any[]);
     } catch (error) {

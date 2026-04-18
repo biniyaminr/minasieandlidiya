@@ -30,3 +30,6 @@ test_image*
 server/.env*
 public/images/*
 !public/images/.gitkeep
+
+# Local wedding images (too large for GitHub, serve locally or via CDN)
+src/public/images/
