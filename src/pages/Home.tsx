@@ -184,7 +184,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-[#FDFBF7] font-sans selection:bg-[#B4915C]/20">
       {/* Hero Section */}
-      <header className="relative py-20 px-6 text-center overflow-hidden">
+      <header className="relative py-12 md:py-20 px-4 text-center overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#B4915C]/5 via-transparent to-transparent opacity-50" />
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -200,7 +200,7 @@ const Home = () => {
               <Heart className="w-8 h-8 fill-current" />
             </motion.div>
           </div>
-          <h1 className="text-5xl md:text-7xl font-serif text-[#1C1917] tracking-tight">
+          <h1 className="text-4xl md:text-7xl font-serif text-[#1C1917] tracking-tight">
             Minasie & Lidiya
           </h1>
           <div className="flex flex-col items-center gap-3">
@@ -216,7 +216,7 @@ const Home = () => {
         </motion.div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 pb-24 space-y-24">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pb-16 md:pb-24 space-y-16 md:space-y-24">
         {/* Upload Section — shown first so guests see it immediately */}
         <section className="flex flex-col items-center">
           <motion.div 
@@ -229,7 +229,7 @@ const Home = () => {
               <div className="absolute -top-12 -right-12 w-32 h-32 bg-[#B4915C]/10 rounded-full blur-3xl" />
               <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-[#B4915C]/10 rounded-full blur-3xl" />
               
-              <CardContent className="p-10 space-y-8 relative z-10">
+              <CardContent className="p-5 sm:p-8 md:p-10 space-y-6 md:space-y-8 relative z-10">
                 {isSuccess ? (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
@@ -268,7 +268,7 @@ const Home = () => {
                       onDragLeave={handleDragLeave}
                       onDrop={handleDrop}
                       className={cn(
-                        "group border-2 border-dashed rounded-[32px] flex flex-col items-center justify-center p-12 text-center transition-all duration-500 relative overflow-hidden",
+                        "group border-2 border-dashed rounded-2xl sm:rounded-[32px] flex flex-col items-center justify-center p-6 sm:p-12 text-center transition-all duration-500 relative overflow-hidden",
                         isDragging 
                           ? "border-[#B4915C] bg-[#B4915C]/5 scale-[0.98] shadow-2xl shadow-[#B4915C]/10" 
                           : "border-[#B4915C]/20 bg-white/40 hover:bg-white/60 hover:border-[#B4915C]/40"
@@ -316,7 +316,7 @@ const Home = () => {
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isCurrentlyUploading}
                         className={cn(
-                          "bg-[#B4915C] hover:bg-[#B4915C]/90 text-white rounded-full px-8 h-12 shadow-lg shadow-[#B4915C]/10 transition-all hover:scale-[1.05] active:scale-95 z-10 font-medium",
+                          "w-full bg-[#B4915C] hover:bg-[#B4915C]/90 text-white rounded-full px-8 h-12 sm:h-12 shadow-lg shadow-[#B4915C]/10 transition-all hover:scale-[1.05] active:scale-95 z-10 font-medium touch-manipulation",
                           isCurrentlyUploading && "opacity-50 cursor-not-allowed"
                         )}
                       >
@@ -437,7 +437,7 @@ const Home = () => {
                                 toast.success('Thank you for sharing!');
                                 setIsSuccess(true);
                               }}
-                              className="w-full h-14 bg-[#B4915C] hover:bg-[#B4915C]/90 text-white rounded-[22px] shadow-xl shadow-[#B4915C]/20 disabled:opacity-30 disabled:grayscale text-lg font-serif transition-all active:scale-[0.98] hover:scale-[1.01]"
+                              className="w-full h-14 bg-[#B4915C] hover:bg-[#B4915C]/90 text-white rounded-2xl sm:rounded-[22px] shadow-xl shadow-[#B4915C]/20 disabled:opacity-30 disabled:grayscale text-base sm:text-lg font-serif transition-all active:scale-[0.98] touch-manipulation"
                             >
                               {allCompleted ? 'Finish & Share Moments' : `Uploading (${uploads.filter(u => u.status === 'uploading').length} left)...`}
                             </Button>
@@ -456,15 +456,33 @@ const Home = () => {
         </section>
 
         {/* Gallery Section — below upload so guests scroll down to see shared memories */}
-        <section className="space-y-12">
-          <div className="flex flex-col items-center text-center space-y-4">
-            <div className="p-2 bg-[#B4915C]/10 rounded-full">
-              <Sparkles className="w-5 h-5 text-[#B4915C]" />
+        <section className="space-y-10">
+          <div className="flex flex-col items-center text-center space-y-5">
+            {/* Ornamental top mark */}
+            <div className="flex items-center gap-3 w-full max-w-sm">
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent to-[#B4915C]/40" />
+              <span className="text-[#B4915C]/60 text-xs tracking-[0.4em]">✦</span>
+              <div className="flex-1 h-px bg-gradient-to-l from-transparent to-[#B4915C]/40" />
             </div>
-            <h2 className="text-3xl md:text-4xl font-serif text-[#1C1917]">Shared Memories</h2>
-            <p className="text-[#1C1917]/50 max-w-lg mx-auto">
-              A collection of beautiful moments shared by our beloved guests.
-            </p>
+
+            <div className="space-y-3 px-4">
+              <p className="text-[10px] text-[#B4915C]/70 uppercase tracking-[0.4em] font-semibold">
+                A Shared Odyssey
+              </p>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif text-[#1C1917] leading-tight tracking-wide">
+                Our Sacred Chapters
+              </h2>
+              <p className="text-xs sm:text-sm text-[#B4915C]/80 uppercase tracking-[0.3em] font-medium italic">
+                Paginated Memories, One Extraordinary Love.
+              </p>
+            </div>
+
+            {/* Ornamental bottom mark */}
+            <div className="flex items-center gap-3 w-full max-w-sm">
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent to-[#B4915C]/40" />
+              <span className="text-[#B4915C]/40 text-[10px] tracking-widest">✦ ✦ ✦</span>
+              <div className="flex-1 h-px bg-gradient-to-l from-transparent to-[#B4915C]/40" />
+            </div>
           </div>
           <GalleryGrid />
         </section>
